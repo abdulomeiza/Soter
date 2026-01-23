@@ -1,12 +1,30 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Version } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AppService } from './app.service';
 
+@ApiTags('app')
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get()
-  getHello(): string {
+  @Version('1')
+  @ApiOperation({
+    summary: 'Root endpoint',
+    description: 'Returns a welcome message and API information',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Welcome message returned successfully',
+    schema: {
+      example: {
+        message: 'Welcome to Pulsefy/Soter API',
+        version: 'v1',
+        docs: '/api/docs',
+      },
+    },
+  })
+  getHello() {
     return this.appService.getHello();
   }
 }
