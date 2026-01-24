@@ -1,0 +1,58 @@
+name: Contract CI
+
+on:
+  push:
+    branches: ['main']
+    paths:
+      - 'app/onchain/**'
+  pull_request:
+    branches: ['main']
+    paths:
+      - 'app/onchain/**'
+
+env:
+  CARGO_TERM_COLOR: always
+  WORKING_DIR: app/onchain
+
+jobs:
+  checks:
+    name: Format, Lint, Build & Test
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIR }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+          components: rustfmt, clippy
+
+      - name: Cache Cargo dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin
+            ~/.cargo/registry
+            ~/.cargo/git
+            ${{ env.WORKING_DIR }}/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('app/onchain/**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Verify formatting
+        run: cargo fmt --check
+
+      - name: Lint with Clippy (deny warnings)
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Build contract (WASM, release)
+        run: cargo build --target wasm32-unknown-unknown --release
+
+      - name: Run tests
+        run: cargo test

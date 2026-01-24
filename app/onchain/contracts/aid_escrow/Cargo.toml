@@ -11,6 +11,9 @@ repository = "https://github.com/soter/aid-escrow"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+ed25519-dalek = "2.2.0"
+rand = "0.9.2"
+serde_json = "1.0.149"
 soroban-sdk = { workspace = true }
 
 [dev-dependencies]
