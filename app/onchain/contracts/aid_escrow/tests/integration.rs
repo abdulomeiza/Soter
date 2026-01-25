@@ -21,7 +21,9 @@ fn test_integration_flow() {
 
     // 2. Create package (admin auth required)
     env.mock_all_auths();
-    let package_id = client.create_package(&recipient, &1000, &token, &86400).unwrap();
+    let package_id = client
+        .create_package(&recipient, &1000, &token, &86400)
+        .unwrap();
     assert_eq!(package_id, 0);
 
     // 3. Verify package details
@@ -34,7 +36,7 @@ fn test_integration_flow() {
     // 4. Claim package (recipient auth required)
     env.mock_all_auths();
     client.claim_package(&package_id).unwrap();
-    
+
     // 5. Verify claimed
     let package = client.get_package(&package_id).unwrap();
     assert_eq!(package.status, PackageStatus::Claimed);
@@ -59,9 +61,13 @@ fn test_multiple_packages() {
     env.mock_all_auths();
 
     // Create multiple packages
-    let id1 = client.create_package(&recipient1, &500, &token, &3600).unwrap();
-    let id2 = client.create_package(&recipient2, &1000, &token, &7200).unwrap();
-    
+    let id1 = client
+        .create_package(&recipient1, &500, &token, &3600)
+        .unwrap();
+    let id2 = client
+        .create_package(&recipient2, &1000, &token, &7200)
+        .unwrap();
+
     assert_eq!(id1, 0);
     assert_eq!(id2, 1);
     assert_eq!(client.get_package_count(), 2);
@@ -93,14 +99,16 @@ fn test_error_cases() {
     // Test invalid amount
     let result = client.create_package(&recipient, &0, &token, &86400);
     assert_eq!(result, Err(Error::InvalidAmount));
-    
+
     // Create valid package first
-    let package_id = client.create_package(&recipient, &1000, &token, &86400).unwrap();
-    
+    let package_id = client
+        .create_package(&recipient, &1000, &token, &86400)
+        .unwrap();
+
     // Try to claim non-existent package
     let result = client.claim_package(&999);
     assert_eq!(result, ());
-    
+
     // Get non-existent package
     let result = client.get_package(&999);
     assert_eq!(result, None);

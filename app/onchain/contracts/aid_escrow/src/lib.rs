@@ -1,7 +1,7 @@
 #![no_std]
 
 use soroban_sdk::{
-    contract, contractimpl, contracterror, Address, Env, IntoVal, Map, Symbol, TryFromVal, Val,
+    Address, Env, IntoVal, Map, Symbol, TryFromVal, Val, contract, contracterror, contractimpl,
 };
 
 #[contract]
@@ -147,18 +147,44 @@ impl AidEscrow {
     }
 
     /// Get package details
-    pub fn get_package(env: Env, package_id: u64) -> Result<Option<(Address, i128, Address, u32, u64, u64)>, Error> {
+    pub fn get_package(
+        env: Env,
+        package_id: u64,
+    ) -> Result<Option<(Address, i128, Address, u32, u64, u64)>, Error> {
         let recipient_key = Symbol::new(&env, "recipient");
-        let recipient: Option<Address> = env.storage().persistent().get(&(recipient_key, package_id));
-        
+        let recipient: Option<Address> =
+            env.storage().persistent().get(&(recipient_key, package_id));
+
         if let Some(recipient) = recipient {
-            let amount: i128 = env.storage().persistent().get(&(Symbol::new(&env, "amount"), package_id)).unwrap();
-            let token: Address = env.storage().persistent().get(&(Symbol::new(&env, "token"), package_id)).unwrap();
-            let status: u32 = env.storage().persistent().get(&(Symbol::new(&env, "status"), package_id)).unwrap();
-            let created_at: u64 = env.storage().persistent().get(&(Symbol::new(&env, "created_at"), package_id)).unwrap();
-            let expires_at: u64 = env.storage().persistent().get(&(Symbol::new(&env, "expires_at"), package_id)).unwrap();
-            
-            Ok(Some((recipient, amount, token, status, created_at, expires_at)))
+            let amount: i128 = env
+                .storage()
+                .persistent()
+                .get(&(Symbol::new(&env, "amount"), package_id))
+                .unwrap();
+            let token: Address = env
+                .storage()
+                .persistent()
+                .get(&(Symbol::new(&env, "token"), package_id))
+                .unwrap();
+            let status: u32 = env
+                .storage()
+                .persistent()
+                .get(&(Symbol::new(&env, "status"), package_id))
+                .unwrap();
+            let created_at: u64 = env
+                .storage()
+                .persistent()
+                .get(&(Symbol::new(&env, "created_at"), package_id))
+                .unwrap();
+            let expires_at: u64 = env
+                .storage()
+                .persistent()
+                .get(&(Symbol::new(&env, "expires_at"), package_id))
+                .unwrap();
+
+            Ok(Some((
+                recipient, amount, token, status, created_at, expires_at,
+            )))
         } else {
             Ok(None)
         }
@@ -179,7 +205,7 @@ impl AidEscrow {
 #[cfg(test)]
 mod test {
     use super::*;
-    use soroban_sdk::{Env, Address, Symbol, testutils::Address as _};
+    use soroban_sdk::{Address, Env, Symbol, testutils::Address as _};
 
     fn setup() -> (Env, AidEscrowClient<'static>) {
         let env = Env::default();
@@ -210,8 +236,10 @@ mod test {
 
         // Admin must authorize
         env.mock_all_auths();
-        
-        let package_id = client.create_package(&recipient, &1000, &token, &86400).unwrap();
+
+        let package_id = client
+            .create_package(&recipient, &1000, &token, &86400)
+            .unwrap();
         assert_eq!(package_id, 0);
 
         let package = client.get_package(&package_id).unwrap();
@@ -230,7 +258,7 @@ mod test {
 
         client.initialize(&admin);
         env.mock_all_auths();
-        
+
         let result = client.create_package(&recipient, &0, &token, &86400);
         assert_eq!(result, Err(Error::InvalidAmount));
     }
@@ -244,15 +272,17 @@ mod test {
 
         client.initialize(&admin);
         env.mock_all_auths();
-        
-        let package_id = client.create_package(&recipient, &1000, &token, &86400).unwrap();
-        
+
+        let package_id = client
+            .create_package(&recipient, &1000, &token, &86400)
+            .unwrap();
+
         // Mock recipient auth for claim
         env.mock_all_auths();
-        
+
         let result = client.claim_package(&package_id);
         assert!(result.is_ok());
-        
+
         let package = client.get_package(&package_id).unwrap();
         assert_eq!(package.status, PackageStatus::Claimed);
     }
@@ -267,12 +297,14 @@ mod test {
 
         client.initialize(&admin);
         env.mock_all_auths();
-        
-        let package_id = client.create_package(&recipient, &1000, &token, &86400).unwrap();
-        
+
+        let package_id = client
+            .create_package(&recipient, &1000, &token, &86400)
+            .unwrap();
+
         // Mock wrong auth (other instead of recipient)
         env.mock_all_auths();
-        
+
         let result = client.claim_package(&package_id);
         // This would fail auth check in real scenario
         // For test, we're mocking all auths so it passes
@@ -290,11 +322,15 @@ mod test {
         env.mock_all_auths();
 
         assert_eq!(client.get_package_count(), 0);
-        
-        client.create_package(&recipient1, &1000, &token, &86400).unwrap();
+
+        client
+            .create_package(&recipient1, &1000, &token, &86400)
+            .unwrap();
         assert_eq!(client.get_package_count(), 1);
-        
-        client.create_package(&recipient2, &2000, &token, &86400).unwrap();
+
+        client
+            .create_package(&recipient2, &2000, &token, &86400)
+            .unwrap();
         assert_eq!(client.get_package_count(), 2);
     }
 
