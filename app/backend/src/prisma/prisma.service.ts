@@ -24,8 +24,7 @@ export class PrismaService
     }
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-      await this.$connect()!;
+      await this.$connect();
       this.connected = true;
     } catch (err) {
       this.connected = false;
@@ -42,7 +41,6 @@ export class PrismaService
       return;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    await this.$disconnect()!;
+    await this.$disconnect();
   }
 }
