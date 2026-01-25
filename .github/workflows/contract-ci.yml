@@ -11,35 +11,48 @@ on:
       - 'app/onchain/**'
 
 jobs:
-  test:
-    name: Test Suite
+  contracts:
+    name: Build & Test Contracts
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: app/onchain
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
           targets: wasm32-unknown-unknown
+          components: rustfmt, clippy
 
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: "app/onchain"
 
-      - name: Check formatting
-        run: cargo fmt --all -- --check
+      - name: Verify formatting
+        working-directory: ./app/onchain
+        run: cargo fmt --check
 
-      - name: Run clippy
+      - name: Lint contracts (WASM)
+        working-directory: ./app/onchain
+        run: cargo clippy --target wasm32-unknown-unknown -- -D warnings
+
+      - name: Lint tests (host)
+        working-directory: ./app/onchain
+        run: cargo clippy --tests --target x86_64-unknown-linux-gnu -- -D warnings
+
+      - name: Install Stellar CLI
         run: |
-          cargo clippy --target wasm32-unknown-unknown -- -D warnings
-          cargo clippy --tests --target x86_64-unknown-linux-gnu -- -D warnings
+          mkdir -p ~/.local/bin
+          curl -L https://github.com/stellar/stellar-cli/releases/download/v22.0.1/stellar-cli-22.0.1-x86_64-unknown-linux-gnu.tar.gz | tar xz -C ~/.local/bin
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          stellar version
+
+      - name: Build contracts
+        working-directory: ./app/onchain/contracts
+        run: stellar contract build
 
       - name: Run tests
+        working-directory: ./app/onchain/contracts
         run: cargo test --target x86_64-unknown-linux-gnu
