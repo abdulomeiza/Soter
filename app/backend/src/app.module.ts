@@ -14,6 +14,7 @@ import { SecurityModule } from './common/security/security.module';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { CampaignsModule } from './campaigns/campaigns.module';
+import { ObservabilityModule } from './observability/observability.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { CampaignsModule } from './campaigns/campaigns.module';
     SecurityModule,
     TestErrorModule,
     CampaignsModule,
+    ObservabilityModule,
   ],
   controllers: [AppController],
   providers: [AppService],
