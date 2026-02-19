@@ -1,6 +1,3 @@
-/* eslint-disable 
-  @typescript-eslint/no-unsafe-assignment
-*/
 import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { Campaign, CampaignStatus, Prisma } from '@prisma/client';
@@ -56,7 +53,7 @@ describe('CampaignsService', () => {
         data: expect.objectContaining({
           name: 'Winter Relief 2026',
           status: CampaignStatus.draft,
-          budget: expect.any(Prisma.Decimal),
+          budget: expect.any(Number),
         }),
       }),
     );
