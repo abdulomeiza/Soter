@@ -1,6 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AidModule } from './aid/aid.module';
@@ -17,6 +18,8 @@ import { join } from 'node:path';
 import { CampaignsModule } from './campaigns/campaigns.module';
 import { ObservabilityModule } from './observability/observability.module';
 import { ClaimsModule } from './claims/claims.module';
+import { LoggingInterceptor } from './interceptors/logging.interceptor';
+import { LoggerService } from './logger/logger.service';
 
 @Module({
   imports: [
@@ -56,10 +59,27 @@ import { ClaimsModule } from './claims/claims.module';
     ClaimsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    LoggerService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggingInterceptor,
+    },
+  ],
 })
 export class AppModule implements NestModule {
+  constructor(private readonly loggerService: LoggerService) {}
+
   configure(consumer: MiddlewareConsumer) {
+    // Apply the enhanced request correlation middleware to all routes
+    // This maintains backward compatibility while adding new features
     consumer.apply(RequestCorrelationMiddleware).forRoutes('*');
+
+    // Log module initialization with correlation ID support info
+    this.loggerService.log(
+      'AppModule initialized with structured logging and correlation ID support',
+      'AppModule',
+    );
   }
 }
