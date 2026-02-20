@@ -1,4 +1,4 @@
-
+import { AidPackageList } from '@/components/AidPackageList';
 
 export default function Home() {
   return (
@@ -16,6 +16,12 @@ export default function Home() {
             that empowers donors and NGOs to distribute humanitarian aid
             directly to individuals in crisis.
           </p>
+
+          {/* Demo of Mock API */}
+          <div className="max-w-2xl mx-auto mt-8 p-6 bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-100 dark:border-gray-800">
+            <AidPackageList />
+          </div>
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
             <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
               Get Started

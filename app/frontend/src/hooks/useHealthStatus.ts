@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from '@tanstack/react-query';
+import { fetchClient } from '@/lib/mock-api/client';
 import type {
   BackendHealthResponse,
   HealthState,
   HealthStatusResult,
-} from "@/types/health";
+} from '@/types/health';
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
 /** Polling interval: 30 seconds — reasonable for a health badge */
 const POLL_INTERVAL_MS = 30_000;
@@ -18,9 +18,9 @@ async function fetchHealth(): Promise<BackendHealthResponse> {
   const timeoutId = setTimeout(() => controller.abort(), 8_000); // 8 s timeout
 
   try {
-    const response = await fetch(`${API_URL}/health`, {
+    const response = await fetchClient(`${API_URL}/health`, {
       signal: controller.signal,
-      cache: "no-store",
+      cache: 'no-store',
     });
 
     if (!response.ok) {
@@ -38,11 +38,11 @@ function deriveState(
   isLoading: boolean,
   isError: boolean,
 ): HealthState {
-  if (isLoading) return "loading";
-  if (isError) return "down";
-  if (status === "ok") return "ok";
-  if (status) return "degraded";
-  return "down";
+  if (isLoading) return 'loading';
+  if (isError) return 'down';
+  if (status === 'ok') return 'ok';
+  if (status) return 'degraded';
+  return 'down';
 }
 
 /**
@@ -54,7 +54,7 @@ export function useHealthStatus(): HealthStatusResult {
     BackendHealthResponse,
     Error
   >({
-    queryKey: ["backend-health"],
+    queryKey: ['backend-health'],
     queryFn: fetchHealth,
     refetchInterval: POLL_INTERVAL_MS,
     refetchIntervalInBackground: true,

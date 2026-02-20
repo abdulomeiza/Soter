@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { WalletConnect } from './WalletConnect';
 import { useWalletStore } from '@/lib/walletStore';
+import { HealthBadge } from './HealthBadge';
 
 export const Navbar: React.FC = () => {
   const { publicKey } = useWalletStore();
