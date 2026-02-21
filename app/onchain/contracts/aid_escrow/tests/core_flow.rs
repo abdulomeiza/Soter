@@ -42,7 +42,14 @@ fn test_core_flow_fund_create_claim() {
     let pkg_id = 101;
     let expiry = env.ledger().timestamp() + 86400; // 1 day later
     let empty_metadata = soroban_sdk::Map::new(&env);
-    client.create_package(&pkg_id, &recipient, &1000, &token_client.address, &expiry, &empty_metadata);
+    client.create_package(
+        &pkg_id,
+        &recipient,
+        &1000,
+        &token_client.address,
+        &expiry,
+        &empty_metadata,
+    );
 
     // Check Package State
     let pkg = client.get_package(&pkg_id);
@@ -82,7 +89,14 @@ fn test_solvency_check() {
 
     // Create valid package using all funds
     let empty_metadata = soroban_sdk::Map::new(&env);
-    client.create_package(&2, &recipient, &1000, &token_client.address, &0, &empty_metadata);
+    client.create_package(
+        &2,
+        &recipient,
+        &1000,
+        &token_client.address,
+        &0,
+        &empty_metadata,
+    );
 
     // Try creating another package (funds are locked)
     let res2 = client.try_create_package(&3, &recipient, &1, &token_client.address, &0);
@@ -112,7 +126,14 @@ fn test_expiry_and_refund() {
     let pkg_id = 1;
     let expiry = start_time + 100;
     let empty_metadata = soroban_sdk::Map::new(&env);
-    client.create_package(&pkg_id, &recipient, &500, &token_client.address, &expiry, &empty_metadata);
+    client.create_package(
+        &pkg_id,
+        &recipient,
+        &500,
+        &token_client.address,
+        &expiry,
+        &empty_metadata,
+    );
 
     // Advance time past expiry
     env.ledger().set_timestamp(expiry + 1);
@@ -153,7 +174,14 @@ fn test_revoke_flow() {
 
     let pkg_id = 1;
     let empty_metadata = soroban_sdk::Map::new(&env);
-    client.create_package(&pkg_id, &recipient, &500, &token_client.address, &0, &empty_metadata);
+    client.create_package(
+        &pkg_id,
+        &recipient,
+        &500,
+        &token_client.address,
+        &0,
+        &empty_metadata,
+    );
 
     // Revoke
     client.revoke(&pkg_id);
@@ -166,7 +194,14 @@ fn test_revoke_flow() {
     // Since revoked, Available should be 1000 again.
     let pkg_id_2 = 2;
     let empty_metadata = soroban_sdk::Map::new(&env);
-    client.create_package(&pkg_id_2, &recipient, &1000, &token_client.address, &0, &empty_metadata);
+    client.create_package(
+        &pkg_id_2,
+        &recipient,
+        &1000,
+        &token_client.address,
+        &0,
+        &empty_metadata,
+    );
 }
 
 #[test]
@@ -193,11 +228,32 @@ fn test_get_recipient_package_count() {
 
     // Test 2: Create packages for recipient1
     let empty_metadata = soroban_sdk::Map::new(&env);
-    client.create_package(&1, &recipient1, &100, &token_client.address, &0, &empty_metadata);
+    client.create_package(
+        &1,
+        &recipient1,
+        &100,
+        &token_client.address,
+        &0,
+        &empty_metadata,
+    );
     let empty_metadata = soroban_sdk::Map::new(&env);
-    client.create_package(&2, &recipient1, &200, &token_client.address, &0, &empty_metadata);
+    client.create_package(
+        &2,
+        &recipient1,
+        &200,
+        &token_client.address,
+        &0,
+        &empty_metadata,
+    );
     let empty_metadata = soroban_sdk::Map::new(&env);
-    client.create_package(&3, &recipient1, &300, &token_client.address, &0, &empty_metadata);
+    client.create_package(
+        &3,
+        &recipient1,
+        &300,
+        &token_client.address,
+        &0,
+        &empty_metadata,
+    );
 
     // Count should be 3
     let count = client.get_recipient_package_count(&recipient1);
@@ -205,7 +261,14 @@ fn test_get_recipient_package_count() {
 
     // Test 3: Create package for recipient2
     let empty_metadata = soroban_sdk::Map::new(&env);
-    client.create_package(&4, &recipient2, &400, &token_client.address, &0, &empty_metadata);
+    client.create_package(
+        &4,
+        &recipient2,
+        &400,
+        &token_client.address,
+        &0,
+        &empty_metadata,
+    );
 
     // recipient1 still has 3 packages
     let count1 = client.get_recipient_package_count(&recipient1);
@@ -250,42 +313,95 @@ fn test_create_package_with_metadata() {
 
     // Create metadata
     let mut metadata = soroban_sdk::Map::new(&env);
-    metadata.set(soroban_sdk::Symbol::new(&env, "purpose"), soroban_sdk::String::new(&env, "emergency relief").unwrap());
-    metadata.set(soroban_sdk::Symbol::new(&env, "region"), soroban_sdk::String::new(&env, "africa").unwrap());
-    metadata.set(soroban_sdk::Symbol::new(&env, "priority"), soroban_sdk::String::new(&env, "high").unwrap());
+    metadata.set(
+        soroban_sdk::Symbol::new(&env, "purpose"),
+        soroban_sdk::String::new(&env, "emergency relief").unwrap(),
+    );
+    metadata.set(
+        soroban_sdk::Symbol::new(&env, "region"),
+        soroban_sdk::String::new(&env, "africa").unwrap(),
+    );
+    metadata.set(
+        soroban_sdk::Symbol::new(&env, "priority"),
+        soroban_sdk::String::new(&env, "high").unwrap(),
+    );
 
     // Create package with metadata
     let pkg_id = 1;
     let expiry = env.ledger().timestamp() + 86400;
-    client.create_package(&pkg_id, &recipient, &500, &token_client.address, &expiry, &metadata);
+    client.create_package(
+        &pkg_id,
+        &recipient,
+        &500,
+        &token_client.address,
+        &expiry,
+        &metadata,
+    );
 
     // Retrieve package and verify metadata
     let pkg = client.get_package(&pkg_id);
-    
+
     // Verify metadata values
-    assert_eq!(pkg.metadata.get(soroban_sdk::Symbol::new(&env, "purpose")).unwrap(), soroban_sdk::String::new(&env, "emergency relief").unwrap());
-    assert_eq!(pkg.metadata.get(soroban_sdk::Symbol::new(&env, "region")).unwrap(), soroban_sdk::String::new(&env, "africa").unwrap());
-    assert_eq!(pkg.metadata.get(soroban_sdk::Symbol::new(&env, "priority")).unwrap(), soroban_sdk::String::new(&env, "high").unwrap());
-    
+    assert_eq!(
+        pkg.metadata
+            .get(soroban_sdk::Symbol::new(&env, "purpose"))
+            .unwrap(),
+        soroban_sdk::String::new(&env, "emergency relief").unwrap()
+    );
+    assert_eq!(
+        pkg.metadata
+            .get(soroban_sdk::Symbol::new(&env, "region"))
+            .unwrap(),
+        soroban_sdk::String::new(&env, "africa").unwrap()
+    );
+    assert_eq!(
+        pkg.metadata
+            .get(soroban_sdk::Symbol::new(&env, "priority"))
+            .unwrap(),
+        soroban_sdk::String::new(&env, "high").unwrap()
+    );
+
     // Verify metadata size
     assert_eq!(pkg.metadata.len(), 3);
 
     // Test with empty metadata
     let empty_metadata = soroban_sdk::Map::new(&env);
     let pkg_id_2 = 2;
-    client.create_package(&pkg_id_2, &recipient, &300, &token_client.address, &expiry, &empty_metadata);
-    
+    client.create_package(
+        &pkg_id_2,
+        &recipient,
+        &300,
+        &token_client.address,
+        &expiry,
+        &empty_metadata,
+    );
+
     let pkg2 = client.get_package(&pkg_id_2);
     assert_eq!(pkg2.metadata.len(), 0);
 
     // Test with single metadata entry
     let mut single_metadata = soroban_sdk::Map::new(&env);
-    single_metadata.set(soroban_sdk::Symbol::new(&env, "note"), soroban_sdk::String::new(&env, "special case").unwrap());
-    
+    single_metadata.set(
+        soroban_sdk::Symbol::new(&env, "note"),
+        soroban_sdk::String::new(&env, "special case").unwrap(),
+    );
+
     let pkg_id_3 = 3;
-    client.create_package(&pkg_id_3, &recipient, &200, &token_client.address, &expiry, &single_metadata);
-    
+    client.create_package(
+        &pkg_id_3,
+        &recipient,
+        &200,
+        &token_client.address,
+        &expiry,
+        &single_metadata,
+    );
+
     let pkg3 = client.get_package(&pkg_id_3);
     assert_eq!(pkg3.metadata.len(), 1);
-    assert_eq!(pkg3.metadata.get(soroban_sdk::Symbol::new(&env, "note")).unwrap(), soroban_sdk::String::new(&env, "special case").unwrap());
+    assert_eq!(
+        pkg3.metadata
+            .get(soroban_sdk::Symbol::new(&env, "note"))
+            .unwrap(),
+        soroban_sdk::String::new(&env, "special case").unwrap()
+    );
 }
