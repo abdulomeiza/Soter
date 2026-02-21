@@ -20,6 +20,7 @@ import {
 import { VerificationService } from './verification.service';
 import { VerificationFlowService } from './verification-flow.service';
 import { CreateVerificationDto } from './dto/create-verification.dto';
+import { API_VERSIONS } from '../common/constants/api-version.constants';
 import { StartVerificationDto } from './dto/start-verification.dto';
 import { ResendVerificationDto } from './dto/resend-verification.dto';
 import { CompleteVerificationDto } from './dto/complete-verification.dto';
@@ -187,11 +188,11 @@ export class VerificationController {
   }
 
   @Post()
-  @Version('1')
+  @Version(API_VERSIONS.V1)
   @ApiOperation({
-    summary: 'Submit identity verification request',
+    summary: 'Submit identity verification request (v1)',
     description:
-      'Submit identity documents and information for verification. Supports document uploads and biometric data.',
+      'Submit identity documents and information for verification. Supports document uploads and biometric data. Part of v1 API.',
   })
   @ApiConsumes('application/json', 'multipart/form-data')
   @ApiResponse({
@@ -270,12 +271,12 @@ export class VerificationController {
   }
 
   @Get(':id')
-  @Version('1')
+  @Version(API_VERSIONS.V1)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
-    summary: 'Get verification status',
+    summary: 'Get verification status (v1)',
     description:
-      'Retrieve the current status and details of a verification request',
+      'Retrieve the current status and details of a verification request. Part of v1 API.',
   })
   @ApiParam({
     name: 'id',
@@ -311,11 +312,11 @@ export class VerificationController {
   }
 
   @Get('user/:userId')
-  @Version('1')
+  @Version(API_VERSIONS.V1)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
-    summary: 'Get user verification history',
-    description: 'Retrieve all verification requests for a specific user',
+    summary: 'Get user verification history (v1)',
+    description: 'Retrieve all verification requests for a specific user. Part of v1 API.',
   })
   @ApiParam({
     name: 'userId',

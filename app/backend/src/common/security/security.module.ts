@@ -4,6 +4,11 @@ import { ConfigService } from '@nestjs/config';
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import helmet, { HelmetOptions } from 'helmet';
 
+// Extended request interface with user property
+interface RequestWithUser extends Request {
+  user?: unknown;
+}
+
 const DEFAULT_ALLOWED_ORIGINS = [
   'http://localhost:3000',
   'http://localhost:3001',
@@ -199,7 +204,7 @@ export const createRateLimiter = (config: ConfigService): RequestHandler => {
     const hasAuthHeader = !!(
       (req.headers &&
         (req.headers.authorization || req.headers.Authorization)) ||
-      (req as any).user
+      (req as RequestWithUser).user
     );
 
     if (!isVerificationPath && hasAuthHeader) {

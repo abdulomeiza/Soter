@@ -81,13 +81,37 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle('Pulsefy/Soter API')
     .setDescription(
-      'API documentation for Pulsefy/Soter platform - Emergency aid and verification system',
+      `API documentation for Pulsefy/Soter platform - Emergency aid and verification system
+
+## API Versioning
+
+This API uses URI-based versioning. The current version is **v1**.
+
+### Version Format
+All endpoints are prefixed with the version number: \`/api/v1/...\`
+
+### Supported Versions
+| Version | Status | Description |
+|---------|--------|-------------|
+| v1 | Current | Active version with full support |
+
+### Deprecation Policy
+- Deprecated endpoints will be marked with \`@Deprecated\` in the documentation
+- Deprecated versions will be supported for at least 6 months after deprecation notice
+- Clients will receive deprecation warnings via the \`Sunset\` HTTP header
+- Migration guides will be provided for major version changes
+
+### Future Versions
+When new versions are released:
+- New endpoints will be available at \`/api/v2/...\`, etc.
+- Previous versions remain accessible during the deprecation period
+- Clients should monitor the API documentation for version updates`,
     )
     .setVersion('1.0')
-    .addTag('health', 'Health check endpoints')
-    .addTag('aid', 'Aid request management')
-    .addTag('verification', 'Identity and document verification')
-    .addTag('app', 'Application root endpoints')
+    .addTag('health', 'Health check endpoints (v1)')
+    .addTag('aid', 'Aid request management (v1)')
+    .addTag('verification', 'Identity and document verification (v1)')
+    .addTag('app', 'Application root endpoints (v1)')
     .addBearerAuth(
       {
         type: 'http',
@@ -97,9 +121,9 @@ async function bootstrap() {
       },
       'JWT-auth',
     )
-    .addServer('http://localhost:3000', 'Local Development')
-    .addServer('https://api.pulsefy.dev', 'Staging')
-    .addServer('https://api.pulsefy.com', 'Production')
+    .addServer('http://localhost:3000/api/v1', 'Local Development (v1)')
+    .addServer('https://api.pulsefy.dev/api/v1', 'Staging (v1)')
+    .addServer('https://api.pulsefy.com/api/v1', 'Production (v1)')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
