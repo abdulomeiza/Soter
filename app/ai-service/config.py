@@ -21,6 +21,8 @@ class Settings(BaseSettings):
         LOG_LEVEL: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
         HOST: Server host (default: 0.0.0.0)
         PORT: Server port (default: 8000)
+        REDIS_URL: Redis connection URL for task broker (default: redis://localhost:6379/0)
+        BACKEND_WEBHOOK_URL: Webhook URL to notify NestJS backend when tasks complete
     """
     
     # API Keys
@@ -32,6 +34,12 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     host: str = "0.0.0.0"
     port: int = 8000
+    
+    # Redis and Celery settings
+    redis_url: str = "redis://localhost:6379/0"
+    
+    # Backend webhook URL for notifications
+    backend_webhook_url: Optional[str] = "http://localhost:3001/ai/webhook"
     
     class Config:
         env_file = ".env"

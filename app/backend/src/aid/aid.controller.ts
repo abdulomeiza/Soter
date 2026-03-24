@@ -2,8 +2,10 @@ import {
   Controller,
   Body,
   Param,
+  Post,
 } from '@nestjs/common';
 import { AidService } from './aid.service';
+import { AiTaskWebhookDto } from './dto/ai-task-webhook.dto';
 import { ApiTags, ApiOperation, ApiOkResponse, ApiCreatedResponse, ApiBadRequestResponse, ApiNotFoundResponse, ApiBearerAuth } from '@nestjs/swagger';
 
 @ApiTags('Aid')
@@ -59,5 +61,16 @@ export class AidController {
     @Body('to') to: string,
   ) {
     return this.aidService.transitionClaim(id, from, to);
+  }
+
+  @ApiOperation({
+    summary: 'Webhook for AI task notifications',
+    description: 'Receives notifications from the AI service when background tasks complete.',
+  })
+  @ApiOkResponse({ description: 'Webhook received successfully.' })
+  @ApiBadRequestResponse({ description: 'Invalid webhook payload.' })
+  @Post('webhook')
+  async handleTaskWebhook(@Body() payload: AiTaskWebhookDto) {
+    return this.aidService.handleTaskWebhook(payload);
   }
 }

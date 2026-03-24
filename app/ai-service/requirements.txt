@@ -16,3 +16,10 @@ httpx==0.26.0
 
 # Logging enhancements (optional)
 python-json-logger==2.0.7
+
+# Celery for background task processing
+celery==5.3.6
+redis==5.0.1
+
+# Task result backend and serialization
+kombu==5.3.4

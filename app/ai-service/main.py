@@ -3,11 +3,14 @@ Soter AI Service - FastAPI Application
 Main entry point for the AI service layer
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
+from pydantic import BaseModel
+from typing import Any, Dict, Optional
 import logging
 from config import settings
+import tasks
 
 # Configure logging
 logging.basicConfig(
@@ -32,6 +35,10 @@ async def lifespan(app: FastAPI):
         provider = settings.get_active_provider()
         logger.info(f"AI provider configured: {provider}")
     
+    # Log Redis configuration
+    logger.info(f"Redis configured: {settings.redis_url}")
+    logger.info(f"Backend webhook URL: {settings.backend_webhook_url}")
+    
     yield
     
     # Shutdown
@@ -44,6 +51,22 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan
 )
+
+
+# Request/Response models
+class InferenceRequest(BaseModel):
+    """Request model for AI inference endpoints"""
+    type: str = "inference"
+    data: Optional[Dict[str, Any]] = None
+    priority: Optional[str] = "normal"
+
+
+class TaskStatusResponse(BaseModel):
+    """Response model for task status"""
+    task_id: str
+    status: str
+    result: Optional[Any] = None
+    error: Optional[str] = None
 
 
 @app.get("/health")
@@ -72,6 +95,127 @@ async def root():
         "docs": "/docs",
         "health": "/health"
     }
+
+
+@app.post("/ai/inference")
+async def create_inference_task(
+    request: InferenceRequest,
+    background_tasks: BackgroundTasks
+):
+    """
+    Create a background task for heavy AI inference
+    
+    This endpoint offloads time-consuming AI tasks to background workers,
+    keeping the API responsive. Use the returned task_id to poll for results.
+    
+    Args:
+        request: Inference request containing task type and data
+        background_tasks: FastAPI background tasks (for internal use)
+    
+    Returns:
+        dict: Task ID and status
+    """
+    logger.info(f"Creating inference task of type: {request.type}")
+    
+    try:
+        # Create background task
+        task_id = tasks.create_task(
+            task_type=request.type,
+            payload={
+                'data': request.data or {},
+                'priority': request.priority or 'normal'
+            }
+        )
+        
+        return {
+            "success": True,
+            "task_id": task_id,
+            "status": "pending",
+            "message": "Task queued for processing",
+            "status_url": f"/ai/status/{task_id}"
+        }
+    
+    except Exception as e:
+        logger.error(f"Failed to create inference task: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to create task: {str(e)}"
+        )
+
+
+@app.get("/ai/status/{task_id}", response_model=TaskStatusResponse)
+async def get_task_status(task_id: str):
+    """
+    Get the status of a background task
+    
+    Poll this endpoint to check if a task has completed. Returns the
+    current status: pending, processing, completed, or failed.
+    
+    Args:
+        task_id: Unique identifier for the task
+    
+    Returns:
+        TaskStatusResponse: Current task status and result if completed
+    
+    Raises:
+        HTTPException: If task_id is not found
+    """
+    logger.info(f"Checking status for task: {task_id}")
+    
+    try:
+        status_info = tasks.get_task_status(task_id)
+        
+        if status_info.get('status') == 'not_found':
+            raise HTTPException(
+                status_code=404,
+                detail=f"Task {task_id} not found"
+            )
+        
+        return status_info
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get task status: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get task status: {str(e)}"
+        )
+
+
+@app.post("/ai/task/{task_id}/cancel")
+async def cancel_task(task_id: str):
+    """
+    Cancel a pending or processing task
+    
+    Args:
+        task_id: Unique identifier for the task
+    
+    Returns:
+        dict: Cancellation result
+    """
+    logger.info(f"Attempting to cancel task: {task_id}")
+    
+    try:
+        from celery.result import AsyncResult
+        result = AsyncResult(task_id, app=tasks.celery_app)
+        result.revoke(terminate=True)
+        
+        tasks.update_task_status(task_id, 'cancelled')
+        
+        return {
+            "success": True,
+            "task_id": task_id,
+            "status": "cancelled",
+            "message": "Task has been cancelled"
+        }
+    
+    except Exception as e:
+        logger.error(f"Failed to cancel task: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to cancel task: {str(e)}"
+        )
 
 
 # Global error handler for HTTP exceptions
